@@ -25,7 +25,6 @@ import {
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
-import Spline from '@splinetool/react-spline';
 import { ShinyText } from './components/ShinyText';
 import { PressureText } from './components/PressureText';
 
