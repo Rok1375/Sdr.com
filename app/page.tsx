@@ -34,6 +34,13 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 export default function Portfolio() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
+  const blobRef = useRef<{ x: number; y: number; targetX: number; targetY: number }>({
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+  });
+  const rafRef = useRef<number | null>(null);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
@@ -53,21 +60,64 @@ export default function Portfolio() {
       document.documentElement.style.scrollBehavior = 'auto';
     }
 
-    // Custom Cursor
+    // Custom Cursor with smooth interpolation
+    const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
+    
+    // Parallax elements
+    const heroBase = document.getElementById('hero-base');
+    const heroPortal = document.getElementById('hero-portal');
+    
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX: x, clientY: y } = e;
+      
+      // Update cursor immediately for responsiveness
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate(${x - 10}px,${y - 10}px)`;
       }
+      
+      // Store target position for blob interpolation
       if (portalRef.current) {
         const rect = portalRef.current.getBoundingClientRect();
-        portalRef.current.style.setProperty('--x', `${x - rect.left}px`);
-        portalRef.current.style.setProperty('--y', `${y - rect.top}px`);
+        blobRef.current.targetX = x - rect.left;
+        blobRef.current.targetY = y - rect.top;
       }
+      
+      // Subtle parallax depth effect - elements shift opposite to cursor
+      if (!reduceMotion) {
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const moveX = (x - centerX) / centerX; // -1 to 1
+        const moveY = (y - centerY) / centerY; // -1 to 1
+        
+        // Background moves opposite to cursor (creates depth)
+        if (heroBase) {
+          heroBase.style.transform = `translate(${-moveX * 15}px, ${-moveY * 10}px)`;
+        }
+        // Portal moves less for parallax layering
+        if (heroPortal) {
+          heroPortal.style.transform = `translate(${-moveX * 8}px, ${-moveY * 6}px)`;
+        }
+      }
+    };
+    
+    // Smooth blob animation loop with interpolation lag
+    const animateBlob = () => {
+      const easing = 0.08; // Lower = more lag, smoother
+      
+      blobRef.current.x = lerp(blobRef.current.x, blobRef.current.targetX, easing);
+      blobRef.current.y = lerp(blobRef.current.y, blobRef.current.targetY, easing);
+      
+      if (portalRef.current) {
+        portalRef.current.style.setProperty('--x', `${blobRef.current.x}px`);
+        portalRef.current.style.setProperty('--y', `${blobRef.current.y}px`);
+      }
+      
+      rafRef.current = requestAnimationFrame(animateBlob);
     };
 
     if (!isMobile) {
       window.addEventListener('mousemove', handleMouseMove, { passive: true });
+      rafRef.current = requestAnimationFrame(animateBlob);
     }
 
     // Exploded View Assembly (Services)
@@ -211,12 +261,31 @@ export default function Portfolio() {
       if (!isMobile) {
         window.removeEventListener('mousemove', handleMouseMove);
       }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };
   }, []);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* SVG Goo Filter for organic blob edges */}
+      <svg className="absolute w-0 h-0" aria-hidden="true">
+        <defs>
+          <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
+              result="goo"
+            />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+      
       <a
         href="#exploded-assembly"
         id="skip-nav-link"
@@ -246,7 +315,7 @@ export default function Portfolio() {
       </Script>
 
       {/* ========== HERO SECTION ========== */}
-      <section id="hero" className="relative w-full h-screen overflow-hidden cursor-none" role="banner" aria-label="Hero introduction">
+      <section id="hero" className="relative w-full min-h-screen overflow-hidden cursor-none" role="banner" aria-label="Hero introduction">
         <div className="absolute inset-0 bg-black/40 z-10" aria-hidden="true"></div>
         <div id="hero-base" className="absolute -top-[15%] -left-[5%] w-[110%] h-[130%]">
           <Image
@@ -272,7 +341,7 @@ export default function Portfolio() {
           <div className="absolute inset-0 bg-blue-500/10 mix-blend-overlay"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/40 to-transparent mix-blend-multiply"></div>
         </div>
-        <div className="absolute inset-0 z-30 p-6 md:p-16 flex flex-col justify-end mix-blend-difference pointer-events-none">
+        <div className="absolute inset-0 z-30 p-6 md:p-16 flex flex-col justify-end pb-24 md:pb-32 mix-blend-difference pointer-events-none">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-8 md:gap-0">
             <p className="text-sm md:text-base text-white/60 max-w-[250px] md:max-w-xs leading-relaxed pointer-events-none">Digital Designer &amp; Creative Director — crafting cinematic experiences for ambitious brands.</p>
             <nav className="flex md:flex-col gap-4 md:gap-6 pointer-events-auto" aria-label="Social media links">
@@ -288,6 +357,13 @@ export default function Portfolio() {
           <ChevronDown size={18} />
         </div>
       </section>
+
+      {/* ========== SPACER: Hero to Services Transition ========== */}
+      <div className="relative h-[20vh] md:h-[30vh] lg:h-[40vh] bg-gradient-to-b from-black via-[#050507] to-[#050507]" aria-hidden="true">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-px h-1/2 bg-gradient-to-b from-white/0 via-white/10 to-white/0"></div>
+        </div>
+      </div>
 
       {/* ========== EXPLODED VIEW ASSEMBLY (Services) ========== */}
       <section id="exploded-assembly" className="relative h-[400vh]" role="region" aria-label="Services and expertise">
