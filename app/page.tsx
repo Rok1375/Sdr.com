@@ -241,9 +241,20 @@ export default function Portfolio() {
       <div id="cursor" ref={cursorRef} className="custom-cursor" aria-hidden="true"></div>
       
       <div className="fixed w-full h-full left-0 top-0 -z-10" data-us-project="aH0ZsntZ1TcKHIyweEA8"></div>
-      <Script id="unicorn-studio" strategy="lazyOnload">
-        {`!function(){var u=window.UnicornStudio;if(u&&u.init){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){u.init()})}else{u.init()}}else{window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.1/dist/unicornStudio.umd.js",i.onload=function(){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){UnicornStudio.init()})}else{UnicornStudio.init()}},(document.head||document.body).appendChild(i)}}();`}
-      </Script>
+      <Script
+        id="unicorn-studio"
+        src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.1/dist/unicornStudio.umd.js"
+        strategy="lazyOnload"
+        integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb"
+        crossOrigin="anonymous"
+        onReady={() => {
+          // @ts-ignore
+          if (window.UnicornStudio && window.UnicornStudio.init) {
+            // @ts-ignore
+            window.UnicornStudio.init();
+          }
+        }}
+      />
 
       {/* ========== HERO SECTION ========== */}
       <section id="hero" className="relative w-full h-screen overflow-hidden cursor-none" role="banner" aria-label="Hero introduction">
