@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Script from 'next/script';
 import {
   Instagram,
   Twitter,
@@ -56,11 +57,12 @@ export default function Portfolio() {
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX: x, clientY: y } = e;
       if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate(${x}px,${y}px)`;
+        cursorRef.current.style.transform = `translate(${x - 10}px,${y - 10}px)`;
       }
       if (portalRef.current) {
-        portalRef.current.style.setProperty('--x', x + 'px');
-        portalRef.current.style.setProperty('--y', y + 'px');
+        const rect = portalRef.current.getBoundingClientRect();
+        portalRef.current.style.setProperty('--x', `${x - rect.left}px`);
+        portalRef.current.style.setProperty('--y', `${y - rect.top}px`);
       }
     };
 
@@ -200,18 +202,6 @@ export default function Portfolio() {
           scrub: true,
         },
       });
-
-      // Spline 3D background parallax
-      gsap.to('.spline-bg', {
-        yPercent: 20,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: 'body',
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: true,
-        },
-      });
     }
 
     // Contact Section — Exploded View Assembly
@@ -249,17 +239,11 @@ export default function Portfolio() {
 
       <div className="noise-overlay" aria-hidden="true"></div>
       <div id="cursor" ref={cursorRef} className="custom-cursor" aria-hidden="true"></div>
-      <div className="spline-bg" aria-hidden="true">
-        <iframe
-          src="https://my.spline.design/distortedspiralcopy-E3eftImqwWVDCs3VOeOacDLp"
-          frameBorder="0"
-          width="100%"
-          height="100%"
-          loading="lazy"
-          title="3D animated background"
-          aria-hidden="true"
-        ></iframe>
-      </div>
+      
+      <div className="fixed w-full h-full left-0 top-0 -z-10" data-us-project="aH0ZsntZ1TcKHIyweEA8"></div>
+      <Script id="unicorn-studio" strategy="lazyOnload">
+        {`!function(){var u=window.UnicornStudio;if(u&&u.init){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){u.init()})}else{u.init()}}else{window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.1/dist/unicornStudio.umd.js",i.onload=function(){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){UnicornStudio.init()})}else{UnicornStudio.init()}},(document.head||document.body).appendChild(i)}}();`}
+      </Script>
 
       {/* ========== HERO SECTION ========== */}
       <section id="hero" className="relative w-full h-screen overflow-hidden cursor-none" role="banner" aria-label="Hero introduction">
@@ -275,7 +259,7 @@ export default function Portfolio() {
             referrerPolicy="no-referrer"
           />
         </div>
-        <div id="hero-portal" ref={portalRef} className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask transition-all duration-300 ease-out z-20" aria-hidden="true">
+        <div id="hero-portal" ref={portalRef} className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask z-20" aria-hidden="true">
           <Image
             src="https://i.postimg.cc/h4194TtY/Create-a-cinematic-portrait-of-a-modern-digital-de-delpmaspu.jpg"
             alt="Cinematic portrait of Soren, digital designer"

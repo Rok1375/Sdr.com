@@ -99,8 +99,8 @@ button:focus-visible {
 }
 
 .blob-mask {
-  mask-image: radial-gradient(circle 180px at var(--x) var(--y), black 100%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle 180px at var(--x) var(--y), black 100%, transparent 100%);
+  mask-image: radial-gradient(circle 250px at var(--x, 50%) var(--y, 50%), black 0%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle 250px at var(--x, 50%) var(--y, 50%), black 0%, transparent 100%);
 }
 
 .custom-cursor {
@@ -115,16 +115,6 @@ button:focus-visible {
   z-index: 10000;
   mix-blend-mode: difference;
   transition: transform .1s ease-out;
-}
-
-.spline-bg {
-  position: fixed;
-  top: -10%;
-  left: -10%;
-  width: 120%;
-  height: 120%;
-  z-index: -1;
-  filter: grayscale(1) contrast(1.2) opacity(0.4);
 }
 
 .explode-card {
