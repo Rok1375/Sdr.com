@@ -54,16 +54,22 @@ export default function Portfolio() {
     }
 
     // Custom Cursor
+    let rafId: number | null = null;
     const handleMouseMove = (e: MouseEvent) => {
-      const { clientX: x, clientY: y } = e;
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate(${x - 10}px,${y - 10}px)`;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
       }
-      if (portalRef.current) {
-        const rect = portalRef.current.getBoundingClientRect();
-        portalRef.current.style.setProperty('--x', `${x - rect.left}px`);
-        portalRef.current.style.setProperty('--y', `${y - rect.top}px`);
-      }
+      rafId = requestAnimationFrame(() => {
+        const { clientX: x, clientY: y } = e;
+        if (cursorRef.current) {
+          cursorRef.current.style.transform = `translate(${x - 10}px,${y - 10}px)`;
+        }
+        if (portalRef.current) {
+          const rect = portalRef.current.getBoundingClientRect();
+          portalRef.current.style.setProperty('--x', `${x - rect.left}px`);
+          portalRef.current.style.setProperty('--y', `${y - rect.top}px`);
+        }
+      });
     };
 
     if (!isMobile) {
@@ -210,6 +216,7 @@ export default function Portfolio() {
     return () => {
       if (!isMobile) {
         window.removeEventListener('mousemove', handleMouseMove);
+        if (rafId) cancelAnimationFrame(rafId);
       }
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };
