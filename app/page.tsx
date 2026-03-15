@@ -4,51 +4,28 @@ import { useEffect, useRef } from 'react';
 import { pointerLoop } from '@/lib/pointerLoop';
 import Image from 'next/image';
 import Script from 'next/script';
-import {
-  Instagram,
-  Twitter,
-  Linkedin,
-  ChevronDown,
-  LayoutTemplate,
-  Fingerprint,
-  Film,
-  Code2,
-  Smartphone,
-  Compass,
-  Cuboid,
-  Lightbulb,
-  Sparkles,
-  PenTool,
-  Quote,
-  Mail,
-  Phone,
-} from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
-import Spline from '@splinetool/react-spline';
-import { ShinyText } from './components/ShinyText';
-import { PressureText } from './components/PressureText';
-
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+import { HeroSection } from './components/sections/HeroSection';
+import { ServicesSection } from './components/sections/ServicesSection';
+import { TestimonialsSection } from './components/sections/TestimonialsSection';
+import { ContactSection } from './components/sections/ContactSection';
+import { SiteFooter } from './components/sections/SiteFooter';
+import { scrollToSection, usePortfolioAnimations } from './hooks/usePortfolioAnimations';
 
 export default function Portfolio() {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
+
+  usePortfolioAnimations(cursorRef, portalRef);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
-    gsap.to(window, {
-      duration: 1.2,
-      scrollTo: { y: targetId, offsetY: 0 },
-      ease: 'power3.inOut',
-    });
+    scrollToSection(targetId);
   };
 
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canUseHoverCursor = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
     if (reduceMotion) {
       document.documentElement.style.scrollBehavior = 'auto';
@@ -245,20 +222,19 @@ export default function Portfolio() {
         Skip to content
       </a>
 
-      {/* Fixed Navigation Header */}
       <header className="fixed top-0 left-0 w-full z-[100] px-6 py-6 md:px-16 md:py-8 flex justify-between items-center mix-blend-difference pointer-events-none">
         <div className="text-lg md:text-xl font-serif tracking-widest uppercase pointer-events-auto">Soren</div>
         <nav className="flex gap-4 md:gap-8 pointer-events-auto">
-          <a href="#hero" onClick={(e) => handleScroll(e, '#hero')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 transition-colors">Home</a>
-          <a href="#exploded-assembly" onClick={(e) => handleScroll(e, '#exploded-assembly')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 transition-colors">Projects</a>
-          <a href="#testimonials" onClick={(e) => handleScroll(e, '#testimonials')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 transition-colors">About</a>
-          <a href="#contact" onClick={(e) => handleScroll(e, '#contact')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 transition-colors">Contact</a>
+          <a href="#hero" onClick={(e) => handleScroll(e, '#hero')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 focus-visible:text-white active:text-white/70 transition-colors">Home</a>
+          <a href="#exploded-assembly" onClick={(e) => handleScroll(e, '#exploded-assembly')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 focus-visible:text-white active:text-white/70 transition-colors">Projects</a>
+          <a href="#testimonials" onClick={(e) => handleScroll(e, '#testimonials')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 focus-visible:text-white active:text-white/70 transition-colors">About</a>
+          <a href="#contact" onClick={(e) => handleScroll(e, '#contact')} className="text-[10px] md:text-xs tracking-[0.2em] uppercase hover:text-white/60 focus-visible:text-white active:text-white/70 transition-colors">Contact</a>
         </nav>
       </header>
 
       <div className="noise-overlay" aria-hidden="true"></div>
       <div id="cursor" ref={cursorRef} className="custom-cursor" aria-hidden="true"></div>
-      
+
       <div className="fixed w-full h-full left-0 top-0 -z-10" data-us-project="aH0ZsntZ1TcKHIyweEA8"></div>
       <Script
         id="unicorn-studio"
@@ -267,11 +243,7 @@ export default function Portfolio() {
         integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb"
         crossOrigin="anonymous"
         onReady={() => {
-          // @ts-ignore
-          if (window.UnicornStudio && window.UnicornStudio.init) {
-            // @ts-ignore
-            window.UnicornStudio.init();
-          }
+          window.UnicornStudio?.init();
         }}
       />
 
@@ -289,7 +261,7 @@ export default function Portfolio() {
             referrerPolicy="no-referrer"
           />
         </div>
-        <div id="hero-portal" ref={portalRef} className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask z-20" aria-hidden="true">
+        <div id="hero-portal" className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask z-20" aria-hidden="true">
           <Image
             src="https://i.postimg.cc/h4194TtY/Create-a-cinematic-portrait-of-a-modern-digital-de-delpmaspu.jpg"
             alt="Cinematic portrait of Soren, digital designer"
@@ -306,9 +278,9 @@ export default function Portfolio() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-8 md:gap-0">
             <p className="text-sm md:text-base text-white/60 max-w-[250px] md:max-w-xs leading-relaxed pointer-events-none">Digital Designer &amp; Creative Director — crafting cinematic experiences for ambitious brands.</p>
             <nav className="flex md:flex-col gap-4 md:gap-6 pointer-events-auto" aria-label="Social media links">
-              <a href="https://instagram.com/sorensdr" id="social-ig" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all" aria-label="Follow on Instagram"><Instagram size={20} /></a>
-              <a href="https://twitter.com/sorensdr" id="social-tw" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all" aria-label="Follow on Twitter"><Twitter size={20} /></a>
-              <a href="https://linkedin.com/in/sorensdr" id="social-li" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all" aria-label="Connect on LinkedIn"><Linkedin size={20} /></a>
+              <a href="https://instagram.com/sorensdr" id="social-ig" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black active:bg-white/80 active:text-black transition-all" aria-label="Follow on Instagram"><Instagram size={20} /></a>
+              <a href="https://twitter.com/sorensdr" id="social-tw" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black active:bg-white/80 active:text-black transition-all" aria-label="Follow on Twitter"><Twitter size={20} /></a>
+              <a href="https://linkedin.com/in/sorensdr" id="social-li" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black focus-visible:bg-white focus-visible:text-black active:bg-white/80 active:text-black transition-all" aria-label="Connect on LinkedIn"><Linkedin size={20} /></a>
             </nav>
           </div>
         </div>
@@ -341,7 +313,7 @@ export default function Portfolio() {
             <div id="cards-grid" className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-5">
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-blue-500 relative overflow-hidden cursor-default" data-explode-x="-320" data-explode-y="-280" data-explode-rotate="-12" role="listitem" aria-label="UI/UX Design service">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <LayoutTemplate className="w-5 h-5 md:w-8 md:h-8 text-blue-500" aria-hidden="true" />
                   <PressureText text="UI/UX Design" className="text-sm md:text-xl text-white tracking-tight" />
@@ -350,7 +322,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-purple-500 relative overflow-hidden cursor-default" data-explode-x="150" data-explode-y="-340" data-explode-rotate="8" role="listitem" aria-label="Brand Identity service">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Fingerprint className="w-5 h-5 md:w-8 md:h-8 text-purple-500" aria-hidden="true" />
                   <PressureText text="Brand Identity" className="text-sm md:text-xl text-white tracking-tight" />
@@ -359,7 +331,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-cyan-400 relative overflow-hidden cursor-default" data-explode-x="350" data-explode-y="-120" data-explode-rotate="15" role="listitem" aria-label="Motion Design service">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Film className="w-5 h-5 md:w-8 md:h-8 text-cyan-400" aria-hidden="true" />
                   <PressureText text="Motion Design" className="text-sm md:text-xl text-white tracking-tight" />
@@ -368,7 +340,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-pink-500 relative overflow-hidden cursor-default" data-explode-x="380" data-explode-y="200" data-explode-rotate="-18" role="listitem" aria-label="Web Development service">
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Code2 className="w-5 h-5 md:w-8 md:h-8 text-pink-500" aria-hidden="true" />
                   <PressureText text="Web Development" className="text-sm md:text-xl text-white tracking-tight" />
@@ -377,7 +349,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-fuchsia-500 relative overflow-hidden cursor-default" data-explode-x="-380" data-explode-y="160" data-explode-rotate="20" role="listitem" aria-label="Digital Product service">
-                <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Smartphone className="w-5 h-5 md:w-8 md:h-8 text-fuchsia-500" aria-hidden="true" />
                   <PressureText text="Digital Product" className="text-sm md:text-xl text-white tracking-tight" />
@@ -386,7 +358,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-indigo-500 relative overflow-hidden cursor-default" data-explode-x="-200" data-explode-y="340" data-explode-rotate="-10" role="listitem" aria-label="Creative Direction service">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Compass className="w-5 h-5 md:w-8 md:h-8 text-indigo-500" aria-hidden="true" />
                   <PressureText text="Creative Direction" className="text-sm md:text-xl text-white tracking-tight" />
@@ -395,7 +367,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-teal-400 relative overflow-hidden cursor-default" data-explode-x="200" data-explode-y="300" data-explode-rotate="14" role="listitem" aria-label="Animation & 3D service">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Cuboid className="w-5 h-5 md:w-8 md:h-8 text-teal-400" aria-hidden="true" />
                   <PressureText text="Animation & 3D" className="text-sm md:text-xl text-white tracking-tight" />
@@ -404,7 +376,7 @@ export default function Portfolio() {
               </div>
 
               <div className="explode-card group p-3 md:p-8 matte-card rounded-2xl border-l-2 border-l-orange-500 relative overflow-hidden cursor-default" data-explode-x="-100" data-explode-y="-360" data-explode-rotate="6" role="listitem" aria-label="Strategic Consulting service">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500" aria-hidden="true"></div>
                 <div className="relative z-10 space-y-2 md:space-y-4">
                   <Lightbulb className="w-5 h-5 md:w-8 md:h-8 text-orange-500" aria-hidden="true" />
                   <PressureText text="Strategic Consulting" className="text-sm md:text-xl text-white tracking-tight" />
@@ -477,33 +449,33 @@ export default function Portfolio() {
           <h2 className="text-4xl md:text-7xl font-serif italic tracking-tighter mb-12 md:mb-16">Let&rsquo;s Connect</h2>
           
           <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 w-full">
-            <a href="tel:3027636707" className="group flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                <Phone className="w-6 h-6 text-white/70 group-hover:text-white transition-colors" />
+            <a href="tel:3027636707" className="group flex flex-col items-center gap-4 active:opacity-90 focus-visible:opacity-100">
+              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 group-active:bg-white/10 transition-colors">
+                <Phone className="w-6 h-6 text-white/70 group-hover:text-white group-active:text-white transition-colors" />
               </div>
               <div className="space-y-1">
                 <p className="text-xs tracking-[0.2em] uppercase text-white/50">Phone</p>
-                <p className="text-lg text-white/90 group-hover:text-white transition-colors">(302) 763-6707</p>
+                <p className="text-lg text-white/90 group-hover:text-white group-active:text-white transition-colors">(302) 763-6707</p>
               </div>
             </a>
 
-            <a href="mailto:sorensadr@gmail.com" className="group flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                <Mail className="w-6 h-6 text-white/70 group-hover:text-white transition-colors" />
+            <a href="mailto:sorensadr@gmail.com" className="group flex flex-col items-center gap-4 active:opacity-90 focus-visible:opacity-100">
+              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 group-active:bg-white/10 transition-colors">
+                <Mail className="w-6 h-6 text-white/70 group-hover:text-white group-active:text-white transition-colors" />
               </div>
               <div className="space-y-1">
                 <p className="text-xs tracking-[0.2em] uppercase text-white/50">Email</p>
-                <p className="text-lg text-white/90 group-hover:text-white transition-colors">sorensadr@gmail.com</p>
+                <p className="text-lg text-white/90 group-hover:text-white group-active:text-white transition-colors">sorensadr@gmail.com</p>
               </div>
             </a>
 
-            <a href="https://instagram.com/sorensdr" target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                <Instagram className="w-6 h-6 text-white/70 group-hover:text-white transition-colors" />
+            <a href="https://instagram.com/sorensdr" target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center gap-4 active:opacity-90 focus-visible:opacity-100">
+              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 group-active:bg-white/10 transition-colors">
+                <Instagram className="w-6 h-6 text-white/70 group-hover:text-white group-active:text-white transition-colors" />
               </div>
               <div className="space-y-1">
                 <p className="text-xs tracking-[0.2em] uppercase text-white/50">Instagram</p>
-                <p className="text-lg text-white/90 group-hover:text-white transition-colors">@sorensdr</p>
+                <p className="text-lg text-white/90 group-hover:text-white group-active:text-white transition-colors">@sorensdr</p>
               </div>
             </a>
           </div>
@@ -524,19 +496,19 @@ export default function Portfolio() {
             <div className="flex flex-col sm:flex-row gap-8 md:gap-12">
               <div className="space-y-3">
                 <p className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-white/50">Contact</p>
-                <a href="mailto:sorensadr@gmail.com" id="footer-email-link" className="block text-sm text-white/60 hover:text-white transition-colors">sorensadr@gmail.com</a>
-                <a href="tel:3027636707" id="footer-phone-link" className="block text-sm text-white/60 hover:text-white transition-colors">(302) 763-6707</a>
+                <a href="mailto:sorensadr@gmail.com" id="footer-email-link" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors">sorensadr@gmail.com</a>
+                <a href="tel:3027636707" id="footer-phone-link" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors">(302) 763-6707</a>
               </div>
               <div className="space-y-3">
                 <p className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-white/50">Social</p>
-                <a href="https://instagram.com/sorensdr" id="footer-ig-link" target="_blank" rel="noopener noreferrer" className="block text-sm text-white/60 hover:text-white transition-colors">Instagram</a>
-                <a href="https://twitter.com/sorensdr" id="footer-tw-link" target="_blank" rel="noopener noreferrer" className="block text-sm text-white/60 hover:text-white transition-colors">Twitter</a>
-                <a href="https://linkedin.com/in/sorensdr" id="footer-li-link" target="_blank" rel="noopener noreferrer" className="block text-sm text-white/60 hover:text-white transition-colors">LinkedIn</a>
+                <a href="https://instagram.com/sorensdr" id="footer-ig-link" target="_blank" rel="noopener noreferrer" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors">Instagram</a>
+                <a href="https://twitter.com/sorensdr" id="footer-tw-link" target="_blank" rel="noopener noreferrer" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors">Twitter</a>
+                <a href="https://linkedin.com/in/sorensdr" id="footer-li-link" target="_blank" rel="noopener noreferrer" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors">LinkedIn</a>
               </div>
               <div className="space-y-3">
                 <p className="text-[10px] md:text-xs tracking-[0.3em] uppercase text-white/50">Legal</p>
-                <a href="/privacy" id="footer-privacy" className="block text-sm text-white/60 hover:text-white transition-colors" aria-label="Privacy Policy">Privacy</a>
-                <a href="/terms" id="footer-terms" className="block text-sm text-white/60 hover:text-white transition-colors" aria-label="Terms of Service">Terms</a>
+                <a href="/privacy" id="footer-privacy" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors" aria-label="Privacy Policy">Privacy</a>
+                <a href="/terms" id="footer-terms" className="block text-sm text-white/60 hover:text-white focus-visible:text-white active:text-white/80 transition-colors" aria-label="Terms of Service">Terms</a>
               </div>
             </div>
           </div>
