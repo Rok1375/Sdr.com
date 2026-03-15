@@ -23,38 +23,74 @@ export const PressureText: React.FC<PressureTextProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const charPositionsRef = useRef<{ x: number; y: number }[]>([]);
+  const mousePosRef = useRef({ x: 0, y: 0 });
+  const rafIdRef = useRef<number | null>(null);
+
+  const updateCharPositions = () => {
+    if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    charPositionsRef.current = charsRef.current.map((charSpan) => {
+      if (!charSpan) return { x: 0, y: 0 };
+      const rect = charSpan.getBoundingClientRect();
+      return {
+        x: rect.left - containerRect.left + rect.width / 2,
+        y: rect.top - containerRect.top + rect.height / 2,
+      };
+    });
+  };
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    updateCharPositions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCharPositions();
+    });
+    resizeObserver.observe(container);
+
     const handleMouseMove = (e: MouseEvent) => {
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
 
-      charsRef.current.forEach((charSpan) => {
-        if (!charSpan) return;
+      if (rafIdRef.current) return;
 
-        const rect = charSpan.getBoundingClientRect();
-        const charCenterX = rect.left + rect.width / 2;
-        const charCenterY = rect.top + rect.height / 2;
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        const container = containerRef.current;
+        if (!container) return;
 
-        const distance = Math.sqrt(
-          Math.pow(mouseX - charCenterX, 2) + Math.pow(mouseY - charCenterY, 2)
-        );
+        const containerRect = container.getBoundingClientRect();
+        const relMouseX = mousePosRef.current.x - containerRect.left;
+        const relMouseY = mousePosRef.current.y - containerRect.top;
 
-        if (distance < radius) {
-          const effect = 1 - distance / radius; // 0 to 1
-          const currentWeight = minWeight + (maxWeight - minWeight) * effect;
-          const currentWidth = minWidth + (maxWidth - minWidth) * effect;
-          charSpan.style.fontVariationSettings = `"wght" ${currentWeight}, "wdth" ${currentWidth}`;
-        } else {
-          charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
-        }
+        charPositionsRef.current.forEach((pos, idx) => {
+          const charSpan = charsRef.current[idx];
+          if (!charSpan) return;
+
+          const distance = Math.sqrt(
+            Math.pow(relMouseX - pos.x, 2) + Math.pow(relMouseY - pos.y, 2)
+          );
+
+          if (distance < radius) {
+            const effect = 1 - distance / radius;
+            const currentWeight = minWeight + (maxWeight - minWeight) * effect;
+            const currentWidth = minWidth + (maxWidth - minWidth) * effect;
+            charSpan.style.fontVariationSettings = `"wght" ${currentWeight}, "wdth" ${currentWidth}`;
+          } else {
+            charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
+          }
+        });
       });
     };
 
     const handleMouseLeave = () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       charsRef.current.forEach((charSpan) => {
         if (!charSpan) return;
         charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
@@ -65,10 +101,14 @@ export const PressureText: React.FC<PressureTextProps> = ({
     container.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
+      resizeObserver.disconnect();
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [minWeight, maxWeight, minWidth, maxWidth, radius]);
+  }, [minWeight, maxWeight, minWidth, maxWidth, radius, text]);
 
   let charIndexCounter = 0;
 
