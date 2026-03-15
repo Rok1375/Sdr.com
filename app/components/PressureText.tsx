@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { pointerLoop } from '@/lib/pointerLoop';
 
 interface PressureTextProps {
   text: string;
@@ -11,6 +12,8 @@ interface PressureTextProps {
   maxWidth?: number;
   radius?: number;
 }
+
+const PRESSURE_BUCKETS = 6;
 
 export const PressureText: React.FC<PressureTextProps> = ({
   text,
@@ -24,157 +27,114 @@ export const PressureText: React.FC<PressureTextProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const charPositionsRef = useRef<{ x: number; y: number }[]>([]);
-  const mousePosRef = useRef({ x: 0, y: 0 });
-  const rafIdRef = useRef<number | null>(null);
-  const hoverCapableRef = useRef(true);
-
-  const resetCharacters = useCallback(() => {
-    charsRef.current.forEach((charSpan) => {
-      if (!charSpan) return;
-      charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
-    });
-  }, [minWeight, minWidth]);
-
-  const revealFromCenter = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const center = { x: rect.width / 2, y: rect.height / 2 };
-
-    charsRef.current.forEach((charSpan, idx) => {
-      if (!charSpan) return;
-
-      // Mobile/tablet fallback: lightweight center-origin burst so touch users
-      // get responsive feedback without continuous proximity calculations.
-      const pos = charPositionsRef.current[idx] ?? center;
-      const distance = Math.hypot(pos.x - center.x, pos.y - center.y);
-      const delay = Math.min(140, distance * 0.7);
-
-      window.setTimeout(() => {
-        charSpan.style.fontVariationSettings = `"wght" ${maxWeight}, "wdth" ${Math.min(maxWidth, minWidth + 35)}`;
-
-        window.setTimeout(() => {
-          charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
-        }, 130);
-      }, delay);
-    });
-  }, [maxWeight, maxWidth, minWeight, minWidth]);
-
-  const applyProximityEffect = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const containerRect = container.getBoundingClientRect();
-    const relMouseX = mousePosRef.current.x - containerRect.left;
-    const relMouseY = mousePosRef.current.y - containerRect.top;
-
-    charPositionsRef.current.forEach((pos, idx) => {
-      const charSpan = charsRef.current[idx];
-      if (!charSpan) return;
-
-      const distance = Math.sqrt(
-        Math.pow(relMouseX - pos.x, 2) + Math.pow(relMouseY - pos.y, 2)
-      );
-
-      if (distance < radius) {
-        const effect = 1 - distance / radius;
-        const currentWeight = minWeight + (maxWeight - minWeight) * effect;
-        const currentWidth = minWidth + (maxWidth - minWidth) * effect;
-        charSpan.style.fontVariationSettings = `"wght" ${currentWeight}, "wdth" ${currentWidth}`;
-      } else {
-        charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
-      }
-    });
-  }, [maxWeight, maxWidth, minWeight, minWidth, radius]);
-
-  const updateCharPositions = useCallback(() => {
-    if (!containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-
-    charPositionsRef.current = charsRef.current.map((charSpan) => {
-      if (!charSpan) return { x: 0, y: 0 };
-      const rect = charSpan.getBoundingClientRect();
-      return {
-        x: rect.left - containerRect.left + rect.width / 2,
-        y: rect.top - containerRect.top + rect.height / 2,
-      };
-    });
-  }, []);
+  const charBucketRef = useRef<number[]>([]);
+  const containerRectRef = useRef<DOMRect | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const updateContainerRect = () => {
+      containerRectRef.current = container.getBoundingClientRect();
+    };
+
+    const updateCharPositions = () => {
+      updateContainerRect();
+      const containerRect = containerRectRef.current;
+      if (!containerRect) return;
+
+      charPositionsRef.current = charsRef.current.map((charSpan) => {
+        if (!charSpan) return { x: 0, y: 0 };
+        const rect = charSpan.getBoundingClientRect();
+        return {
+          x: rect.left - containerRect.left + rect.width / 2,
+          y: rect.top - containerRect.top + rect.height / 2,
+        };
+      });
+    };
+
+    const resetBuckets = () => {
+      charBucketRef.current = charsRef.current.map(() => 0);
+      charsRef.current.forEach((charSpan) => {
+        charSpan?.style.setProperty('--pressure-bucket', '0');
+      });
+    };
+
+    const updatePressure = ({ x, y }: { x: number; y: number }) => {
+      const containerRect = containerRectRef.current;
+      if (!containerRect) return;
+
+      const relMouseX = x - containerRect.left;
+      const relMouseY = y - containerRect.top;
+
+      charPositionsRef.current.forEach((pos, idx) => {
+        const charSpan = charsRef.current[idx];
+        if (!charSpan) return;
+
+        const dx = relMouseX - pos.x;
+        const dy = relMouseY - pos.y;
+        const distance = Math.hypot(dx, dy);
+        const effect = distance < radius ? 1 - distance / radius : 0;
+        const bucket = Math.round(effect * PRESSURE_BUCKETS);
+
+        if (charBucketRef.current[idx] !== bucket) {
+          charBucketRef.current[idx] = bucket;
+          charSpan.style.setProperty('--pressure-bucket', bucket.toString());
+        }
+      });
+    };
+
     updateCharPositions();
+    resetBuckets();
 
     const resizeObserver = new ResizeObserver(() => {
       updateCharPositions();
     });
+
     resizeObserver.observe(container);
 
-    const hoverMediaQuery = window.matchMedia('(hover: hover)');
-    const updateHoverCapability = () => {
-      hoverCapableRef.current = hoverMediaQuery.matches;
-    };
-    updateHoverCapability();
-
-    const scheduleProximityEffect = () => {
-      if (rafIdRef.current) return;
-
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null;
-        applyProximityEffect();
-      });
+    const handleInvalidate = () => {
+      updateCharPositions();
     };
 
-    const handlePointerMove = (e: PointerEvent) => {
-      // Fine-pointer + hover only: keep the expensive per-character distortion
-      // for mouse/trackpad users where hover feedback is expected.
-      if (!hoverCapableRef.current || e.pointerType === 'touch') return;
-      mousePosRef.current = { x: e.clientX, y: e.clientY };
-      scheduleProximityEffect();
-    };
+    window.addEventListener('resize', handleInvalidate, { passive: true });
+    window.addEventListener('scroll', handleInvalidate, { passive: true });
 
     const handlePointerLeave = () => {
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-      resetCharacters();
+      resetBuckets();
     };
 
-    const handlePointerDown = (e: PointerEvent) => {
-      // Coarse pointer fallback: on tap/pen contact, run a quick center-origin
-      // reveal so interaction still feels responsive without hover dependency.
-      if (hoverCapableRef.current && e.pointerType === 'mouse') return;
-      revealFromCenter();
-    };
-
-    const handleFocus = () => {
-      // Keyboard fallback: focus gets the same lightweight reveal treatment.
-      if (hoverCapableRef.current) return;
-      revealFromCenter();
-    };
-
-    hoverMediaQuery.addEventListener('change', updateHoverCapability);
-    container.addEventListener('pointermove', handlePointerMove);
     container.addEventListener('pointerleave', handlePointerLeave);
-    container.addEventListener('pointerdown', handlePointerDown);
-    container.addEventListener('focus', handleFocus);
+
+    let unsubscribePointer: (() => void) | null = null;
+
+    if (!reduceMotion) {
+      unsubscribePointer = pointerLoop.subscribe(updatePressure);
+    }
+
+    const fonts = document.fonts;
+    const onFontsDone = () => {
+      updateCharPositions();
+    };
+
+    if (fonts) {
+      fonts.ready.then(onFontsDone);
+      fonts.addEventListener('loadingdone', onFontsDone);
+    }
 
     return () => {
       resizeObserver.disconnect();
-      hoverMediaQuery.removeEventListener('change', updateHoverCapability);
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
+      if (fonts) {
+        fonts.removeEventListener('loadingdone', onFontsDone);
       }
-      container.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('resize', handleInvalidate);
+      window.removeEventListener('scroll', handleInvalidate);
       container.removeEventListener('pointerleave', handlePointerLeave);
-      container.removeEventListener('pointerdown', handlePointerDown);
-      container.removeEventListener('focus', handleFocus);
+      unsubscribePointer?.();
     };
-  }, [applyProximityEffect, resetCharacters, revealFromCenter, updateCharPositions, text]);
+  }, [radius, text]);
 
   let charIndexCounter = 0;
 
@@ -182,8 +142,16 @@ export const PressureText: React.FC<PressureTextProps> = ({
     <div
       ref={containerRef}
       className={`flex flex-wrap ${className}`}
-      tabIndex={0}
-      style={{ fontFamily: 'var(--font-roboto-flex), sans-serif' }}
+      style={
+        {
+          fontFamily: 'var(--font-roboto-flex), sans-serif',
+          '--pressure-min-weight': minWeight,
+          '--pressure-max-weight': maxWeight,
+          '--pressure-min-width': minWidth,
+          '--pressure-max-width': maxWidth,
+          '--pressure-buckets': PRESSURE_BUCKETS,
+        } as React.CSSProperties
+      }
     >
       {text.split(' ').map((word, wordIndex, arr) => (
         <span key={wordIndex} className={`inline-flex whitespace-nowrap ${wordIndex !== arr.length - 1 ? 'mr-[0.3em]' : ''}`}>
@@ -195,8 +163,8 @@ export const PressureText: React.FC<PressureTextProps> = ({
                 ref={(el) => {
                   charsRef.current[currentIndex] = el;
                 }}
-                className="inline-block transition-all duration-75 ease-out"
-                style={{ fontVariationSettings: `"wght" ${minWeight}, "wdth" ${minWidth}` }}
+                className="pressure-char inline-block"
+                style={{ '--pressure-bucket': 0 } as React.CSSProperties}
               >
                 {char}
               </span>

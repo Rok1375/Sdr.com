@@ -1,6 +1,8 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { pointerLoop } from '@/lib/pointerLoop';
+import Image from 'next/image';
 import Script from 'next/script';
 import { HeroSection } from './components/sections/HeroSection';
 import { ServicesSection } from './components/sections/ServicesSection';
@@ -29,27 +31,43 @@ export default function Portfolio() {
       document.documentElement.style.scrollBehavior = 'auto';
     }
 
-    // Custom Cursor
-    let rafId: number | null = null;
-    const handleMouseMove = (e: MouseEvent) => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-      rafId = requestAnimationFrame(() => {
-        const { clientX: x, clientY: y } = e;
+    let portalRect: DOMRect | null = null;
+    const updatePortalRect = () => {
+      portalRect = portalRef.current?.getBoundingClientRect() ?? null;
+    };
+
+    const invalidatePortalRect = () => {
+      portalRect = null;
+    };
+
+    let unsubscribePointer: (() => void) | null = null;
+
+    if (!isMobile && !reduceMotion) {
+      unsubscribePointer = pointerLoop.subscribe(({ x, y }) => {
         if (cursorRef.current) {
           cursorRef.current.style.transform = `translate(${x - 10}px,${y - 10}px)`;
         }
-      });
-    };
 
-    if (canUseHoverCursor) {
-      window.addEventListener('mousemove', handleMouseMove, { passive: true });
+        if (portalRef.current) {
+          if (!portalRect) {
+            updatePortalRect();
+          }
+
+          if (portalRect) {
+            portalRef.current.style.setProperty('--x', `${x - portalRect.left}px`);
+            portalRef.current.style.setProperty('--y', `${y - portalRect.top}px`);
+          }
+        }
+      });
+
+      window.addEventListener('resize', invalidatePortalRect, { passive: true });
+      window.addEventListener('scroll', invalidatePortalRect, { passive: true });
+      updatePortalRect();
     }
 
     // Exploded View Assembly (Services)
     const expCards = gsap.utils.toArray('.explode-card') as HTMLElement[];
-    if (expCards.length) {
+    if (!reduceMotion && expCards.length) {
       ScrollTrigger.create({
         trigger: '#exploded-assembly',
         start: 'top top',
@@ -124,7 +142,7 @@ export default function Portfolio() {
 
     // Ticker Horizontal Scroll
     const tickerContent = document.getElementById('ticker-content');
-    if (tickerContent) {
+    if (!reduceMotion && tickerContent) {
       gsap.to('#ticker-content', {
         x: () => -(tickerContent.scrollWidth - window.innerWidth),
         ease: 'none',
@@ -139,25 +157,24 @@ export default function Portfolio() {
       });
     }
 
-    // Generic Section Fade-in
-    gsap.utils.toArray('section').forEach((s: any) => {
-      if (s.id === 'exploded-assembly' || s.id === 'contact' || s.id === 'hero') return;
-      gsap.from(s, {
-        opacity: 0,
-        y: 50,
-        duration: 1.5,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: s,
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-      });
-    });
-
-    // Parallax Backgrounds
     if (!reduceMotion) {
-      // Hero image parallax
+      // Generic Section Fade-in
+      gsap.utils.toArray('section').forEach((s: any) => {
+        if (s.id === 'exploded-assembly' || s.id === 'contact' || s.id === 'hero') return;
+        gsap.from(s, {
+          opacity: 0,
+          y: 50,
+          duration: 1.5,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: s,
+            start: 'top 85%',
+            toggleActions: 'play none none reverse',
+          },
+        });
+      });
+
+      // Parallax Backgrounds
       gsap.to('#hero-base', {
         yPercent: 20,
         ease: 'none',
@@ -185,9 +202,10 @@ export default function Portfolio() {
     // (Removed as the new form doesn't use it)
 
     return () => {
-      if (canUseHoverCursor) {
-        window.removeEventListener('mousemove', handleMouseMove);
-        if (rafId) cancelAnimationFrame(rafId);
+      unsubscribePointer?.();
+      if (!isMobile && !reduceMotion) {
+        window.removeEventListener('resize', invalidatePortalRect);
+        window.removeEventListener('scroll', invalidatePortalRect);
       }
       ScrollTrigger.getAll().forEach((st) => st.kill());
     };

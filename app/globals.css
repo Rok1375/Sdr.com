@@ -123,40 +123,13 @@ button:focus-visible {
   backface-visibility: hidden;
 }
 
-
-.interactive-reveal {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  transition: color 220ms ease, border-color 220ms ease, background-color 220ms ease;
-}
-
-.interactive-reveal::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    180px circle at var(--cursor-x, 50%) var(--cursor-y, 50%),
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.08) 35%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  opacity: 0;
-  transition: opacity 220ms ease;
-  z-index: -1;
-}
-
-.interactive-reveal:hover::before,
-.interactive-reveal:focus-visible::before {
-  opacity: 1;
-}
-
-.interactive-reveal:hover,
-.interactive-reveal:focus-visible {
-  color: rgba(255, 255, 255, 0.95);
-  border-color: rgba(255, 255, 255, 0.35);
+.pressure-char {
+  --pressure-bucket: 0;
+  --pressure-normalized: calc(var(--pressure-bucket) / var(--pressure-buckets));
+  --pressure-wght: calc(var(--pressure-min-weight) + (var(--pressure-max-weight) - var(--pressure-min-weight)) * var(--pressure-normalized));
+  --pressure-wdth: calc(var(--pressure-min-width) + (var(--pressure-max-width) - var(--pressure-min-width)) * var(--pressure-normalized));
+  font-variation-settings: "wght" var(--pressure-wght), "wdth" var(--pressure-wdth);
+  transition: font-variation-settings 75ms ease-out;
 }
 
 /* Contact Section Styles */
@@ -193,24 +166,5 @@ button:focus-visible {
 
   .custom-cursor {
     display: none !important;
-  }
-
-  #hero {
-    cursor: auto !important;
-  }
-
-  a:active,
-  button:active,
-  [role="button"]:active {
-    opacity: 0.85;
-    transform: translateY(1px);
-  }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  a:hover,
-  button:hover,
-  [role="button"]:hover {
-    opacity: 0.95;
   }
 }
