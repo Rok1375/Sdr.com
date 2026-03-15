@@ -1,47 +1,22 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useRef } from 'react';
 import Script from 'next/script';
-import {
-  Instagram,
-  Twitter,
-  Linkedin,
-  ChevronDown,
-  LayoutTemplate,
-  Fingerprint,
-  Film,
-  Code2,
-  Smartphone,
-  Compass,
-  Cuboid,
-  Lightbulb,
-  Sparkles,
-  PenTool,
-  Quote,
-  Mail,
-  Phone,
-} from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
-import Spline from '@splinetool/react-spline';
-import { ShinyText } from './components/ShinyText';
-import { PressureText } from './components/PressureText';
-
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+import { HeroSection } from './components/sections/HeroSection';
+import { ServicesSection } from './components/sections/ServicesSection';
+import { TestimonialsSection } from './components/sections/TestimonialsSection';
+import { ContactSection } from './components/sections/ContactSection';
+import { SiteFooter } from './components/sections/SiteFooter';
+import { scrollToSection, usePortfolioAnimations } from './hooks/usePortfolioAnimations';
 
 export default function Portfolio() {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
+
+  usePortfolioAnimations(cursorRef, portalRef);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
-    gsap.to(window, {
-      duration: 1.2,
-      scrollTo: { y: targetId, offsetY: 0 },
-      ease: 'power3.inOut',
-    });
+    scrollToSection(targetId);
   };
 
   useEffect(() => {
@@ -64,11 +39,6 @@ export default function Portfolio() {
         const { clientX: x, clientY: y } = e;
         if (cursorRef.current) {
           cursorRef.current.style.transform = `translate(${x - 10}px,${y - 10}px)`;
-        }
-        if (portalRef.current) {
-          const rect = portalRef.current.getBoundingClientRect();
-          portalRef.current.style.setProperty('--x', `${x - rect.left}px`);
-          portalRef.current.style.setProperty('--y', `${y - rect.top}px`);
         }
       });
     };
@@ -234,7 +204,6 @@ export default function Portfolio() {
         Skip to content
       </a>
 
-      {/* Fixed Navigation Header */}
       <header className="fixed top-0 left-0 w-full z-[100] px-6 py-6 md:px-16 md:py-8 flex justify-between items-center mix-blend-difference pointer-events-none">
         <div className="text-lg md:text-xl font-serif tracking-widest uppercase pointer-events-auto">Soren</div>
         <nav className="flex gap-4 md:gap-8 pointer-events-auto">
@@ -247,7 +216,7 @@ export default function Portfolio() {
 
       <div className="noise-overlay" aria-hidden="true"></div>
       <div id="cursor" ref={cursorRef} className="custom-cursor" aria-hidden="true"></div>
-      
+
       <div className="fixed w-full h-full left-0 top-0 -z-10" data-us-project="aH0ZsntZ1TcKHIyweEA8"></div>
       <Script
         id="unicorn-studio"
@@ -256,11 +225,7 @@ export default function Portfolio() {
         integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb"
         crossOrigin="anonymous"
         onReady={() => {
-          // @ts-ignore
-          if (window.UnicornStudio && window.UnicornStudio.init) {
-            // @ts-ignore
-            window.UnicornStudio.init();
-          }
+          window.UnicornStudio?.init();
         }}
       />
 
@@ -278,7 +243,7 @@ export default function Portfolio() {
             referrerPolicy="no-referrer"
           />
         </div>
-        <div id="hero-portal" ref={portalRef} className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask z-20" aria-hidden="true">
+        <div id="hero-portal" className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask z-20" aria-hidden="true">
           <Image
             src="https://i.postimg.cc/h4194TtY/Create-a-cinematic-portrait-of-a-modern-digital-de-delpmaspu.jpg"
             alt="Cinematic portrait of Soren, digital designer"
