@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import { Inter, Playfair_Display, Roboto_Flex } from 'next/font/google';
+import { CursorRevealProvider } from './components/CursorRevealProvider';
 import './globals.css'; // Global styles
 
 const inter = Inter({
@@ -30,7 +31,9 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={`scroll-smooth ${inter.variable} ${playfair.variable} ${robotoFlex.variable}`}>
-      <body className="font-sans antialiased" suppressHydrationWarning>{children}</body>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <CursorRevealProvider>{children}</CursorRevealProvider>
+      </body>
     </html>
   );
 }
