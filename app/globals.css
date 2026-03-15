@@ -123,6 +123,42 @@ button:focus-visible {
   backface-visibility: hidden;
 }
 
+
+.interactive-reveal {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: color 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.interactive-reveal::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    180px circle at var(--cursor-x, 50%) var(--cursor-y, 50%),
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.08) 35%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: opacity 220ms ease;
+  z-index: -1;
+}
+
+.interactive-reveal:hover::before,
+.interactive-reveal:focus-visible::before {
+  opacity: 1;
+}
+
+.interactive-reveal:hover,
+.interactive-reveal:focus-visible {
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 /* Contact Section Styles */
 #contact {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
