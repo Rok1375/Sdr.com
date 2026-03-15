@@ -150,12 +150,31 @@ button:focus-visible {
   flex-shrink: 0;
 }
 
-@media (max-width: 767px) {
+@media (hover: none), (pointer: coarse) {
   #contact {
     height: auto !important;
   }
 
   .custom-cursor {
     display: none !important;
+  }
+
+  #hero {
+    cursor: auto !important;
+  }
+
+  a:active,
+  button:active,
+  [role="button"]:active {
+    opacity: 0.85;
+    transform: translateY(1px);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a:hover,
+  button:hover,
+  [role="button"]:hover {
+    opacity: 0.95;
   }
 }
