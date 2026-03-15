@@ -4,12 +4,32 @@ import { useEffect, useRef } from 'react';
 import { pointerLoop } from '@/lib/pointerLoop';
 import Image from 'next/image';
 import Script from 'next/script';
-import { HeroSection } from './components/sections/HeroSection';
-import { ServicesSection } from './components/sections/ServicesSection';
-import { TestimonialsSection } from './components/sections/TestimonialsSection';
-import { ContactSection } from './components/sections/ContactSection';
-import { SiteFooter } from './components/sections/SiteFooter';
-import { scrollToSection, usePortfolioAnimations } from './hooks/usePortfolioAnimations';
+import {
+  Instagram,
+  Twitter,
+  Linkedin,
+  ChevronDown,
+  LayoutTemplate,
+  Fingerprint,
+  Film,
+  Code2,
+  Smartphone,
+  Compass,
+  Cuboid,
+  Lightbulb,
+  Sparkles,
+  PenTool,
+  Quote,
+  Mail,
+  Phone,
+} from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import { ShinyText } from './components/ShinyText';
+import { PressureText } from './components/PressureText';
+
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default function Portfolio() {
   const cursorRef = useRef<HTMLDivElement>(null);
