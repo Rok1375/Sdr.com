@@ -18,7 +18,3 @@ View your app in AI Studio: https://ai.studio/apps/d16422f2-23d6-4491-9c7f-8451b
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
-
-## Shared utilities
-
-Reusable utility helpers live in [`lib/`](./lib), including the class name merge helper in [`lib/utils.ts`](./lib/utils.ts).
