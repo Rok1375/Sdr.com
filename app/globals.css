@@ -123,6 +123,15 @@ button:focus-visible {
   backface-visibility: hidden;
 }
 
+.pressure-char {
+  --pressure-bucket: 0;
+  --pressure-normalized: calc(var(--pressure-bucket) / var(--pressure-buckets));
+  --pressure-wght: calc(var(--pressure-min-weight) + (var(--pressure-max-weight) - var(--pressure-min-weight)) * var(--pressure-normalized));
+  --pressure-wdth: calc(var(--pressure-min-width) + (var(--pressure-max-width) - var(--pressure-min-width)) * var(--pressure-normalized));
+  font-variation-settings: "wght" var(--pressure-wght), "wdth" var(--pressure-wdth);
+  transition: font-variation-settings 75ms ease-out;
+}
+
 /* Contact Section Styles */
 #contact {
   border-top: 1px solid rgba(255, 255, 255, 0.05);

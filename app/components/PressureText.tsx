@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { pointerLoop } from '@/lib/pointerLoop';
 
 interface PressureTextProps {
   text: string;
@@ -11,6 +12,8 @@ interface PressureTextProps {
   maxWidth?: number;
   radius?: number;
 }
+
+const PRESSURE_BUCKETS = 6;
 
 export const PressureText: React.FC<PressureTextProps> = ({
   text,
@@ -24,91 +27,114 @@ export const PressureText: React.FC<PressureTextProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const charPositionsRef = useRef<{ x: number; y: number }[]>([]);
-  const mousePosRef = useRef({ x: 0, y: 0 });
-  const rafIdRef = useRef<number | null>(null);
-
-  const updateCharPositions = () => {
-    if (!containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-
-    charPositionsRef.current = charsRef.current.map((charSpan) => {
-      if (!charSpan) return { x: 0, y: 0 };
-      const rect = charSpan.getBoundingClientRect();
-      return {
-        x: rect.left - containerRect.left + rect.width / 2,
-        y: rect.top - containerRect.top + rect.height / 2,
-      };
-    });
-  };
+  const charBucketRef = useRef<number[]>([]);
+  const containerRectRef = useRef<DOMRect | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const updateContainerRect = () => {
+      containerRectRef.current = container.getBoundingClientRect();
+    };
+
+    const updateCharPositions = () => {
+      updateContainerRect();
+      const containerRect = containerRectRef.current;
+      if (!containerRect) return;
+
+      charPositionsRef.current = charsRef.current.map((charSpan) => {
+        if (!charSpan) return { x: 0, y: 0 };
+        const rect = charSpan.getBoundingClientRect();
+        return {
+          x: rect.left - containerRect.left + rect.width / 2,
+          y: rect.top - containerRect.top + rect.height / 2,
+        };
+      });
+    };
+
+    const resetBuckets = () => {
+      charBucketRef.current = charsRef.current.map(() => 0);
+      charsRef.current.forEach((charSpan) => {
+        charSpan?.style.setProperty('--pressure-bucket', '0');
+      });
+    };
+
+    const updatePressure = ({ x, y }: { x: number; y: number }) => {
+      const containerRect = containerRectRef.current;
+      if (!containerRect) return;
+
+      const relMouseX = x - containerRect.left;
+      const relMouseY = y - containerRect.top;
+
+      charPositionsRef.current.forEach((pos, idx) => {
+        const charSpan = charsRef.current[idx];
+        if (!charSpan) return;
+
+        const dx = relMouseX - pos.x;
+        const dy = relMouseY - pos.y;
+        const distance = Math.hypot(dx, dy);
+        const effect = distance < radius ? 1 - distance / radius : 0;
+        const bucket = Math.round(effect * PRESSURE_BUCKETS);
+
+        if (charBucketRef.current[idx] !== bucket) {
+          charBucketRef.current[idx] = bucket;
+          charSpan.style.setProperty('--pressure-bucket', bucket.toString());
+        }
+      });
+    };
+
     updateCharPositions();
+    resetBuckets();
 
     const resizeObserver = new ResizeObserver(() => {
       updateCharPositions();
     });
+
     resizeObserver.observe(container);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      mousePosRef.current = { x: e.clientX, y: e.clientY };
-
-      if (rafIdRef.current) return;
-
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null;
-        const container = containerRef.current;
-        if (!container) return;
-
-        const containerRect = container.getBoundingClientRect();
-        const relMouseX = mousePosRef.current.x - containerRect.left;
-        const relMouseY = mousePosRef.current.y - containerRect.top;
-
-        charPositionsRef.current.forEach((pos, idx) => {
-          const charSpan = charsRef.current[idx];
-          if (!charSpan) return;
-
-          const distance = Math.sqrt(
-            Math.pow(relMouseX - pos.x, 2) + Math.pow(relMouseY - pos.y, 2)
-          );
-
-          if (distance < radius) {
-            const effect = 1 - distance / radius;
-            const currentWeight = minWeight + (maxWeight - minWeight) * effect;
-            const currentWidth = minWidth + (maxWidth - minWidth) * effect;
-            charSpan.style.fontVariationSettings = `"wght" ${currentWeight}, "wdth" ${currentWidth}`;
-          } else {
-            charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
-          }
-        });
-      });
+    const handleInvalidate = () => {
+      updateCharPositions();
     };
 
-    const handleMouseLeave = () => {
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-      charsRef.current.forEach((charSpan) => {
-        if (!charSpan) return;
-        charSpan.style.fontVariationSettings = `"wght" ${minWeight}, "wdth" ${minWidth}`;
-      });
+    window.addEventListener('resize', handleInvalidate, { passive: true });
+    window.addEventListener('scroll', handleInvalidate, { passive: true });
+
+    const handlePointerLeave = () => {
+      resetBuckets();
     };
 
-    container.addEventListener('mousemove', handleMouseMove);
-    container.addEventListener('mouseleave', handleMouseLeave);
+    container.addEventListener('pointerleave', handlePointerLeave);
+
+    let unsubscribePointer: (() => void) | null = null;
+
+    if (!reduceMotion) {
+      unsubscribePointer = pointerLoop.subscribe(updatePressure);
+    }
+
+    const fonts = document.fonts;
+    const onFontsDone = () => {
+      updateCharPositions();
+    };
+
+    if (fonts) {
+      fonts.ready.then(onFontsDone);
+      fonts.addEventListener('loadingdone', onFontsDone);
+    }
 
     return () => {
       resizeObserver.disconnect();
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
+      if (fonts) {
+        fonts.removeEventListener('loadingdone', onFontsDone);
       }
-      container.removeEventListener('mousemove', handleMouseMove);
-      container.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('resize', handleInvalidate);
+      window.removeEventListener('scroll', handleInvalidate);
+      container.removeEventListener('pointerleave', handlePointerLeave);
+      unsubscribePointer?.();
     };
-  }, [minWeight, maxWeight, minWidth, maxWidth, radius, text]);
+  }, [radius, text]);
 
   let charIndexCounter = 0;
 
@@ -116,7 +142,16 @@ export const PressureText: React.FC<PressureTextProps> = ({
     <div
       ref={containerRef}
       className={`flex flex-wrap ${className}`}
-      style={{ fontFamily: 'var(--font-roboto-flex), sans-serif' }}
+      style={
+        {
+          fontFamily: 'var(--font-roboto-flex), sans-serif',
+          '--pressure-min-weight': minWeight,
+          '--pressure-max-weight': maxWeight,
+          '--pressure-min-width': minWidth,
+          '--pressure-max-width': maxWidth,
+          '--pressure-buckets': PRESSURE_BUCKETS,
+        } as React.CSSProperties
+      }
     >
       {text.split(' ').map((word, wordIndex, arr) => (
         <span key={wordIndex} className={`inline-flex whitespace-nowrap ${wordIndex !== arr.length - 1 ? 'mr-[0.3em]' : ''}`}>
@@ -128,8 +163,8 @@ export const PressureText: React.FC<PressureTextProps> = ({
                 ref={(el) => {
                   charsRef.current[currentIndex] = el;
                 }}
-                className="inline-block transition-all duration-75 ease-out"
-                style={{ fontVariationSettings: `"wght" ${minWeight}, "wdth" ${minWidth}` }}
+                className="pressure-char inline-block"
+                style={{ '--pressure-bucket': 0 } as React.CSSProperties}
               >
                 {char}
               </span>
