@@ -1,40 +1,22 @@
 'use client';
 
-import { memo, useEffect, useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { memo, useEffect, useState } from 'react';
+import Script from 'next/script';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-
-const UnicornScene = dynamic(() => import('unicornstudio-react'), {
-  ssr: false,
-});
 
 type HeroProps = {
   onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, targetId: string) => void;
 };
 
-const HERO_SCENE_SDK_URL =
-  'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@2.1.4/dist/unicornStudio.umd.js';
+const UNICORN_EMBED_SCRIPT = `!function(){var u=window.UnicornStudio;if(u&&u.init){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){u.init()})}else{u.init()}}else{window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.4/dist/unicornStudio.umd.js",i.onload=function(){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){UnicornStudio.init()})}else{UnicornStudio.init()}},(document.head||document.body).appendChild(i)}}();`;
 
 function Hero({ onNavigate }: HeroProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsVisible(true), 180);
     return () => window.clearTimeout(timer);
   }, []);
-
-  const placeholder = useMemo(
-    () => (
-      <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.14),_transparent_38%),linear-gradient(180deg,_rgba(8,10,20,0.96),_rgba(4,5,12,1))]">
-        <div
-          className="h-14 w-14 animate-spin rounded-full border border-white/10 border-t-cyan-300/80"
-          aria-hidden="true"
-        />
-      </div>
-    ),
-    []
-  );
 
   return (
     <section
@@ -43,27 +25,14 @@ function Hero({ onNavigate }: HeroProps) {
       role="banner"
       aria-label="Hero introduction"
     >
+      <Script id="unicorn-studio-hero" strategy="afterInteractive">
+        {UNICORN_EMBED_SCRIPT}
+      </Script>
+
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div
-          id="hero-portal"
-          className={`absolute inset-0 transition-opacity duration-300 ${sceneReady ? 'opacity-100' : 'opacity-0'}`}
-        >
-          <div className="absolute left-1/2 top-1/2 h-full w-full min-w-[1440px] min-h-[900px] -translate-x-1/2 -translate-y-1/2">
-            <UnicornScene
-              projectId="Y5sRd6wCKFfubLmbMeXw"
-              width="1440px"
-              height="900px"
-              scale={1}
-              dpi={1.5}
-              sdkUrl={HERO_SCENE_SDK_URL}
-              className="h-full w-full"
-              placeholder={placeholder}
-              placeholderClassName="h-full w-full"
-              showPlaceholderWhileLoading
-              ariaLabel="Animated Unicorn Studio background"
-              onLoad={() => setSceneReady(true)}
-              onError={() => setSceneReady(true)}
-            />
+        <div id="hero-portal" className="absolute inset-0">
+          <div className="absolute inset-0 [&_[data-us-project]]:h-full [&_[data-us-project]]:w-full">
+            <div style={{ width: '100%', height: '100%' }} data-us-project="Y5sRd6wCKFfubLmbMeXw"></div>
           </div>
         </div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.2),_transparent_32%),radial-gradient(circle_at_80%_20%,_rgba(168,85,247,0.18),_transparent_28%)]" />
