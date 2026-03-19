@@ -1,12 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Image from 'next/image';
 import {
   Instagram,
   Twitter,
   Linkedin,
-  ChevronDown,
   LayoutTemplate,
   Fingerprint,
   Film,
@@ -27,13 +25,12 @@ import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import Spline from '@splinetool/react-spline';
 import { ShinyText } from './components/ShinyText';
 import { PressureText } from './components/PressureText';
+import Hero from './components/Hero';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default function Portfolio() {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
-  const fgImageRef = useRef<HTMLImageElement>(null);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
@@ -85,18 +82,6 @@ export default function Portfolio() {
       portalX += (mouseX - portalX) * ease;
       portalY += (mouseY - portalY) * ease;
 
-      if (portalRef.current) {
-        const rect = portalRef.current.getBoundingClientRect();
-        portalRef.current.style.setProperty('--x', `${portalX - rect.left}px`);
-        portalRef.current.style.setProperty('--y', `${portalY - rect.top}px`);
-      }
-
-      // Subtle parallax on the foreground image
-      if (fgImageRef.current) {
-        const xOffset = (mouseX / window.innerWidth - 0.5) * -40;
-        const yOffset = (mouseY / window.innerHeight - 0.5) * -40;
-        fgImageRef.current.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.05)`;
-      }
 
       reqId = requestAnimationFrame(renderLoop);
     };
@@ -265,37 +250,7 @@ export default function Portfolio() {
       <div id="cursor" ref={cursorRef} className="custom-cursor" aria-hidden="true"></div>
 
       {/* ========== HERO SECTION ========== */}
-      <section id="hero" className="relative w-full h-screen overflow-hidden cursor-none" role="banner" aria-label="Hero introduction">
-        <div id="hero-portal" ref={portalRef} className="absolute -top-[10%] -left-[5%] w-[110%] h-[120%] blob-mask z-20" aria-hidden="true">
-          <Image
-            ref={fgImageRef}
-            src="https://i.postimg.cc/h4194TtY/Create-a-cinematic-portrait-of-a-modern-digital-de-delpmaspu.jpg"
-            alt="Cinematic portrait of Soren, digital designer"
-            className="w-full h-full object-cover scale-105 will-change-transform"
-            priority
-            width={1920}
-            height={1080}
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-blue-500/10 mix-blend-overlay"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/40 to-transparent mix-blend-multiply"></div>
-        </div>
-        <div className="absolute inset-0 z-30 p-6 md:p-16 flex flex-col justify-start mix-blend-difference pointer-events-none transition-colors duration-300">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-start w-full gap-8 md:gap-0">
-            <p className="text-sm md:text-base text-white/60 max-w-[250px] md:max-w-xs leading-relaxed pointer-events-none">Digital Designer &amp; Creative Director — crafting cinematic experiences for ambitious brands.</p>
-            <nav className="flex md:flex-col gap-4 md:gap-6 pointer-events-auto" aria-label="Social media links">
-              <a href="https://instagram.com/sorensdr" id="social-ig" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all" aria-label="Follow on Instagram"><Instagram size={20} /></a>
-              <a href="https://twitter.com/sorensdr" id="social-tw" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all" aria-label="Follow on Twitter"><Twitter size={20} /></a>
-              <a href="https://linkedin.com/in/sorensdr" id="social-li" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all" aria-label="Connect on LinkedIn"><Linkedin size={20} /></a>
-            </nav>
-          </div>
-        </div>
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 opacity-40 pointer-events-none animate-bounce" aria-hidden="true">
-          <span className="text-[10px] tracking-[0.3em] uppercase">Scroll</span>
-          <ChevronDown size={18} />
-        </div>
-      </section>
+      <Hero onNavigate={handleScroll} />
 
       {/* ========== SPACER ========== */}
       <div className="w-full h-32 md:h-64 relative z-20 pointer-events-none"></div>
