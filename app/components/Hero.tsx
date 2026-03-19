@@ -4,7 +4,7 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 
-const UnicornScene = dynamic(() => import('unicornstudio-react/next'), {
+const UnicornScene = dynamic(() => import('unicornstudio-react'), {
   ssr: false,
 });
 
@@ -27,7 +27,10 @@ function Hero({ onNavigate }: HeroProps) {
   const placeholder = useMemo(
     () => (
       <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.14),_transparent_38%),linear-gradient(180deg,_rgba(8,10,20,0.96),_rgba(4,5,12,1))]">
-        <div className="h-14 w-14 rounded-full border border-white/10 border-t-cyan-300/80 animate-spin" aria-hidden="true" />
+        <div
+          className="h-14 w-14 animate-spin rounded-full border border-white/10 border-t-cyan-300/80"
+          aria-hidden="true"
+        />
       </div>
     ),
     []
@@ -45,23 +48,23 @@ function Hero({ onNavigate }: HeroProps) {
           id="hero-portal"
           className={`absolute inset-0 transition-opacity duration-300 ${sceneReady ? 'opacity-100' : 'opacity-0'}`}
         >
-          <UnicornScene
-            projectId="Y5sRd6wCKFfubLmbMeXw"
-            width="100%"
-            height="100%"
-            scale={1}
-            dpi={1.5}
-            lazyLoad
-            production
-            sdkUrl={HERO_SCENE_SDK_URL}
-            className="h-full w-full"
-            placeholder={placeholder}
-            placeholderClassName="h-full w-full"
-            showPlaceholderWhileLoading
-            ariaLabel="Animated Unicorn Studio background"
-            onLoad={() => setSceneReady(true)}
-            onError={() => setSceneReady(true)}
-          />
+          <div className="absolute left-1/2 top-1/2 h-full w-full min-w-[1440px] min-h-[900px] -translate-x-1/2 -translate-y-1/2">
+            <UnicornScene
+              projectId="Y5sRd6wCKFfubLmbMeXw"
+              width="1440px"
+              height="900px"
+              scale={1}
+              dpi={1.5}
+              sdkUrl={HERO_SCENE_SDK_URL}
+              className="h-full w-full"
+              placeholder={placeholder}
+              placeholderClassName="h-full w-full"
+              showPlaceholderWhileLoading
+              ariaLabel="Animated Unicorn Studio background"
+              onLoad={() => setSceneReady(true)}
+              onError={() => setSceneReady(true)}
+            />
+          </div>
         </div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.2),_transparent_32%),radial-gradient(circle_at_80%_20%,_rgba(168,85,247,0.18),_transparent_28%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,_rgba(5,7,12,0.28)_0%,_rgba(5,7,12,0.72)_55%,_rgba(5,7,12,0.94)_100%)]" />
@@ -121,7 +124,10 @@ function Hero({ onNavigate }: HeroProps) {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-white/42" aria-hidden="true">
+      <div
+        className="pointer-events-none absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-white/42"
+        aria-hidden="true"
+      >
         <span className="text-[10px] uppercase tracking-[0.35em]">Scroll</span>
         <ChevronDown className="h-4 w-4 animate-bounce" />
       </div>
