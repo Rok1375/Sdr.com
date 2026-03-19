@@ -1,14 +1,15 @@
 'use client';
 
 import { memo, useEffect, useState } from 'react';
-import Script from 'next/script';
 import { ArrowRight, ChevronDown } from 'lucide-react';
+import UnicornScene from 'unicornstudio-react/next';
 
 type HeroProps = {
   onNavigate: (event: React.MouseEvent<HTMLAnchorElement>, targetId: string) => void;
 };
 
-const UNICORN_EMBED_SCRIPT = `!function(){var u=window.UnicornStudio;if(u&&u.init){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){u.init()})}else{u.init()}}else{window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.4/dist/unicornStudio.umd.js",i.onload=function(){if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){UnicornStudio.init()})}else{UnicornStudio.init()}},(document.head||document.body).appendChild(i)}}();`;
+const UNICORN_SDK_URL =
+  'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.4/dist/unicornStudio.umd.js';
 
 function Hero({ onNavigate }: HeroProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -25,14 +26,15 @@ function Hero({ onNavigate }: HeroProps) {
       role="banner"
       aria-label="Hero introduction"
     >
-      <Script id="unicorn-studio-hero" strategy="afterInteractive">
-        {UNICORN_EMBED_SCRIPT}
-      </Script>
-
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div id="hero-portal" className="absolute inset-0">
-          <div className="absolute inset-0 [&_[data-us-project]]:h-full [&_[data-us-project]]:w-full">
-            <div style={{ width: '100%', height: '100%' }} data-us-project="Y5sRd6wCKFfubLmbMeXw"></div>
+          <div className="absolute inset-0">
+            <UnicornScene
+              projectId="Y5sRd6wCKFfubLmbMeXw"
+              sdkUrl={UNICORN_SDK_URL}
+              width="100%"
+              height="100%"
+            />
           </div>
         </div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.2),_transparent_32%),radial-gradient(circle_at_80%_20%,_rgba(168,85,247,0.18),_transparent_28%)]" />
