@@ -184,7 +184,7 @@ export default function Portfolio() {
     }
 
     // Generic Section Fade-in
-    gsap.utils.toArray('section').forEach((s: any) => {
+    gsap.utils.toArray('section').forEach((s: HTMLElement) => {
       if (s.id === 'exploded-assembly' || s.id === 'contact' || s.id === 'hero') return;
       gsap.from(s, {
         opacity: 0,
